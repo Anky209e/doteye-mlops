@@ -1,5 +1,4 @@
 from torch.utils.data import Dataset,dataloader,random_split
-from skimage import io,transform
 import numpy as np
 from torchvision import transforms,utils
 from PIL import Image
