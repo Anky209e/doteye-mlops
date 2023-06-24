@@ -4,6 +4,8 @@ import numpy as np
 from torchvision import transforms,utils
 from PIL import Image
 import os
+import matplotlib.pyplot as plt
+from utils import image_convert,mask_convert
 
 class MedicalDataset(Dataset):
     """
@@ -18,8 +20,8 @@ class MedicalDataset(Dataset):
         self.folders = os.listdir(path)
         self.transform = transforms.Compose([
             transforms.ToTensor(),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomVerticalFlip()
+            # transforms.RandomHorizontalFlip(),
+            # transforms.RandomVerticalFlip()
         ])
         
 
@@ -37,7 +39,7 @@ class MedicalDataset(Dataset):
         img = np.array(img,dtype=np.float32)
         mask = self.get_mask(mask_folder,128,128).astype('float32')
         mask = np.array(mask,dtype=np.float32)
-        mask[mask == 255.0] = 1.0
+        mask[mask != 0] = 1.0
         img = self.transform(img)
         mask = self.transform(mask)
 
@@ -61,8 +63,9 @@ class MedicalDataset(Dataset):
 # if __name__=="__main__":
 #     data = MedicalDataset("stage1_train")
 
-#     image,mask = data[0]
-#     print(mask.max())
+#     image,mask = data[30]
+
+
 #     tr = transforms.ToPILImage()
 #     ig_1 = tr(image)
 #     ig_1.show()

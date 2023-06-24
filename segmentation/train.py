@@ -7,17 +7,27 @@ import torchvision
 from tqdm import tqdm
 from model import UNET
 from dataset import MedicalDataset
-from utils import save_checkpoint,load_checkpoint,check_accuracy,save_predictions_as_imgs,iou_,iou_batch
+import matplotlib.pyplot as plt
+from utils import ( save_checkpoint,
+                   load_checkpoint,
+                   check_accuracy,
+                   save_predictions_as_imgs,
+                   iou_,
+                   iou_batch,
+                   mask_convert,
+                   image_convert,
+                   plot_and_save_images)
 from torch.utils.tensorboard import SummaryWriter
 writer = SummaryWriter('runs/seg_1')
+
 
 # Hyperparameters
 LEARNING_RATE = 1e-3
 BATCH_SIZE = 16
-NUM_EPOCHS = 10
+NUM_EPOCHS = 20
 NUM_WORKERS = 2
 PIN_MEMORY = True
-LOAD_MODEL = True
+LOAD_MODEL = False
 DATA_PATH = "stage1_train"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -56,7 +66,7 @@ class DiceBCELoss(nn.Module):
         dice_loss = 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth)  
         BCE = F.binary_cross_entropy_with_logits(inputs, targets, reduction='mean')
         loss_final = BCE * bce_weight + dice_loss * (1 - bce_weight)
-        return loss_final
+        return loss_final,dice_loss.item()
 
 def train_step(loader,model,optimizer,loss_fn,scaler):
     """
@@ -71,14 +81,18 @@ def train_step(loader,model,optimizer,loss_fn,scaler):
     loop = tqdm(loader)
 
     for batch_idx, (data,targets) in enumerate(loop):
-        data = data.to(device=DEVICE,dtype=torch.float)
-        targets = targets.to(device=DEVICE,dtype=torch.float)
+        data = data.to(device=DEVICE)
+        targets = targets.to(device=DEVICE)
 
         # forward pass
-        
         predictions = model(data)
-        loss = loss_fn(predictions,targets)
+        
+        loss,dice_loss = loss_fn(predictions,targets)
         score = iou_batch(predictions,targets)
+
+
+        plot_and_save_images(data[0],predictions[0],targets[0],path="temp.png")
+
         # backward pass
         optimizer.zero_grad()
         loss.backward()
@@ -87,7 +101,7 @@ def train_step(loader,model,optimizer,loss_fn,scaler):
         writer.add_scalar("Loss/step",loss.item(),batch_idx)
         writer.add_scalar("Score/step",score,batch_idx)
         # Tqdm loop update
-        loop.set_postfix(loss=loss.item(),iou=score)
+        loop.set_postfix(loss=loss.item(),iou=score,dice_loss=dice_loss)
     return loss,score
 
 
@@ -96,7 +110,7 @@ def main():
     Main Function for training
     """
     model = UNET(in_channels=3,out_channels=1).to(device=DEVICE)
-    loss_fn = nn.BCEWithLogitsLoss()
+    loss_fn = DiceBCELoss()
     optimizer = optim.Adam(model.parameters(),lr=LEARNING_RATE)
 
     data = MedicalDataset(DATA_PATH)
@@ -130,14 +144,15 @@ def main():
 
         writer.add_scalar("Loss/epoch",loss.item(),epoch)
         writer.add_scalar("Score/epoch",score,epoch)
+
         checkpoint = {
             "state_dict": model.state_dict(),
-            "optimizer":optimizer.state_dict(),
+            # "optimizer":optimizer.state_dict(),
         }
         save_checkpoint(checkpoint)
 
         # check accuracy
-        check_accuracy(val_loader, model, device=DEVICE)
+        # check_accuracy(val_loader, model, device=DEVICE)
 
         add_image_to_tb(val_loader,model,device=DEVICE)
         # print some examples to a folder

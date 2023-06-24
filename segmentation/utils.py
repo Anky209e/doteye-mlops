@@ -2,6 +2,7 @@ import torch
 import torchvision
 import numpy as np
 import torchvision.transforms as T
+import matplotlib.pyplot as plt
 
 def save_checkpoint(state, filename="my_checkpoint.pth.tar"):
     """
@@ -16,6 +17,27 @@ def load_checkpoint(checkpoint, model):
     """
     print("=> Loading checkpoint")
     model.load_state_dict(checkpoint["state_dict"])
+
+def mask_convert(mask):
+    """
+    Convert mask to image
+    """
+    mask = mask.clone().cpu().detach().numpy()
+    mask = mask.transpose((1,2,0))
+    mask = mask.clip(0,1)
+    mask = np.squeeze(mask)
+    return mask
+
+def image_convert(image):
+    """
+    Convert tensor to image
+    """
+    image = image.clone().cpu().numpy()
+    image = image.transpose((1,2,0))
+    image = image.clip(0,1)
+    image = np.squeeze(image)
+    
+    return image
 
 def iou_(y_pred,y):
     """
@@ -42,6 +64,29 @@ def iou_batch(y_pred,y):
     iou = np.nanmean(ious)
     return iou  
 
+def plot_and_save_images(real_image,pred_image,target_image,path):
+    fig = plt.figure(figsize=(10,4))
+
+    fig.add_subplot(1, 3, 1)
+    plt.imshow(image_convert(real_image))
+    plt.axis('on')
+    plt.title("Image")
+
+    fig.add_subplot(1, 3, 2)
+    plt.imshow(mask_convert(pred_image))
+    plt.axis('on')
+    plt.title("Predicted Mask")
+
+    fig.add_subplot(1, 3, 3)
+    plt.imshow(mask_convert(target_image))
+    plt.axis('on')
+    plt.title("Actual Mask")
+
+    plt.savefig(path)
+    plt.close()
+
+
+
 def check_accuracy(loader, model, device="cuda"):
     """
     Accuracy score based on pixel numbers
@@ -56,6 +101,7 @@ def check_accuracy(loader, model, device="cuda"):
             x = x.to(device)
             y = y.to(device)
             preds = torch.sigmoid(model(x))
+            
             preds = (preds > 0.5).float()
             num_correct += (preds == y).sum()
             num_pixels += torch.numel(preds)
@@ -79,13 +125,18 @@ def save_predictions_as_imgs(
     for idx, (x, y) in enumerate(loader):
         x = x.to(device=device)
         with torch.no_grad():
-            preds = torch.sigmoid(model(x))
-
-            preds = (preds > 0.5).float()
-        torchvision.utils.save_image(
-            preds, f"{folder}/pred_{idx}.png"
-        )
-        torchvision.utils.save_image(y, f"{folder}/real_{idx}.png")
+            preds = model(x)
+            # preds = (preds > 0.5).float()
+            plot_and_save_images(
+                real_image=x[0],
+                pred_image=preds[0],
+                target_image=y[0],
+                path= f"{folder}/pred_{idx}.png"
+            )
+        # torchvision.utils.save_image(
+        #     preds, f"{folder}/pred_{idx}.png"
+        # )
+        # torchvision.utils.save_image(y, f"{folder}/real_{idx}.png")
         
 
     model.train()
