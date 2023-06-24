@@ -56,6 +56,31 @@ This Dataset contains medical images of cell containing nuclie and different mas
 - This model was trained for only 20 epochs.It can be improved more using more training.These were the results after 5 epochs.
     ![image](images/show.png)
 
+## Django Webapp Files
+
+- This folder is structured according to django for deployment of Model.
+
+- `webapp` is the core django project containing django-app named `segment` handeling ML files.
+
+- for more info run `python manage.py help`
+
+## Containerization and Orchestration
+
+- This application is containerized using Docker.
+- We are using `docker-compose` for orchestration of containers.
+- For running webapp:
+    ```bash
+    docker compose -f docker-compose.yml up --build
+    ```
+- For stopping the aplication:
+    ```bash
+    docker compose -f docker/docker-compose.yml down
+    ```
+
+> Note: Make sure you have installed both docker and docker-compose
+
+> WARNING: As this was developed in just 2 days.There can be bugs and erros.Please make sure to open a issue if you face a bug or error.
+
 
 
 
