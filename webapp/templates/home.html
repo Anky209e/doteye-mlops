@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Segment</title>
+</head>
+
+<style>
+    body {
+        background-color: #282a36;
+    }
+
+    .heading{
+        text-align: center;
+        color: #f8f8f2;
+        background-color: #44475a;
+        border-radius: 20px;
+        padding: 20px;
+        margin: 1%;
+    }
+
+    .upload-form{
+        margin: 1%;
+        background-color: #44475a;
+       
+        text-align: center;
+        font-weight: bold;
+        font-size: large;
+        color: #f8f8f2;
+        border-radius: 20px;
+        padding: 1%;
+    }
+
+    input[type=submit]{
+        position: relative;
+        width:20%;
+        height: 60px;
+        margin-bottom: 1%;
+
+
+        border-radius: 10px;
+        box-sizing: border-box;
+
+        cursor: pointer;
+        transition: 0.5s;
+        opacity: 0.5;
+        
+
+        font-size: large;
+        font-family: "Righteous";
+        text-transform: uppercase;
+    }
+
+    .result {
+        text-align: center;
+        background-color: #44475a;
+        padding: 1%;
+        border-radius: 20px;
+
+    }
+    .result-img {
+        width: 300px;
+        height: 300px;
+    }
+</style>
+
+<body>
+    <div class="heading">
+        <h1 class="heading-text">Nuclie Image segmentation.</h1>
+        <p>By Ankit Kumar  <br>  <br><a style="text-decoration: none; color: #50fa7b;" href="https://github.com/Anky209e/doteye-mlops">Source Code</a></p>
+    </div>
+
+    <!-- <div class="unet">
+        <h3>Trained on custom UNET implemented using pytorch from scratch.</h3>
+        <img src="https://miro.medium.com/v2/resize:fit:720/format:webp/1*f7YOaE4TWubwaFF7Z1fzNw.png" alt="" class="unet-img">
+    </div> -->
+
+    {% if image_form %}
+    <form action="" method="post" enctype="multipart/form-data" class="upload-form">
+        {% csrf_token %}
+        {{ image_form }}
+        <br><br>
+        <input type="submit" value="Generate" class="submit">
+        
+    </form>
+    {% else %}
+
+    <br>
+    <br>
+    <div class="result">
+
+        <img class="result-img" src="/media/out.png" alt="Image Loading..">
+    </div>
+
+    {% endif %}
+</body>
+
+</html>
