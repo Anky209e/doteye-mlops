@@ -2,6 +2,8 @@
 
 [Download weights](https://drive.google.com/file/d/1-PkmPa8m6jVXFJkUOmO3Df8fmEmcwwKD/view?usp=sharing) and put the tar file in `webapp/seg_classes`.
 
+![video](images/demo.gif)
+
 `segmentation` folder contains files related to all data presprocessing,model building and training process.
 
 `webapp` folder contains django app deployment of model
